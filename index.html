@@ -14,21 +14,11 @@
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; backdrop-filter: blur(4px); }
         main { flex: 1; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        /* Animation du Spinner */
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-            display: inline-block;
-        }
+        .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; display: inline-block; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        /* Bouton en mode chargement */
         .btn-loading { pointer-events: none; opacity: 0.8; }
+        /* Style Certifié */
+        .certified-badge { color: #1d9bf0; display: inline-flex; align-items: center; width: 16px; margin-left: 4px; }
     </style>
 </head>
 <body>
@@ -44,7 +34,8 @@
             </div>
         </div>
         <div class="flex gap-2 items-center">
-            <button onclick="openAuth()" id="btn-login" class="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-bold py-2 px-4 rounded-xl transition">Connexion / Inscription</button>
+            <button onclick="openSettings()" id="btn-settings" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-bold py-2 px-3 rounded-xl transition">⚙️ Profil</button>
+            <button onclick="openAuth()" id="btn-login" class="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-bold py-2 px-4 rounded-xl transition">Connexion</button>
             <button onclick="logout()" id="btn-logout" class="hidden bg-red-50 text-red-600 text-sm font-bold py-2 px-4 rounded-xl hover:bg-red-100 transition">Déconnexion</button>
         </div>
     </header>
@@ -68,7 +59,7 @@
                 <div class="flex gap-4 mb-8" id="vote-section"></div>
                 <h3 class="font-bold text-xl mb-4">Commentaires</h3>
                 <div class="bg-gray-50 p-4 rounded-2xl mb-6">
-                    <textarea id="new-comment" rows="3" class="w-full bg-white border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 mb-3" placeholder="Exprimez-vous... (Connexion requise)"></textarea>
+                    <textarea id="new-comment" rows="3" class="w-full bg-white border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 mb-3" placeholder="Exprimez-vous..."></textarea>
                     <button id="btn-post-comment" onclick="postComment()" class="bg-[#0056b3] text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-600 transition">Publier</button>
                 </div>
                 <div id="comments-list" class="space-y-4 text-sm"></div>
@@ -83,21 +74,51 @@
                 <button onclick="closeAuth()" class="text-gray-400 hover:text-red-500 font-bold">X</button>
             </div>
             <div class="space-y-3">
-                <input type="email" id="authEmail" placeholder="Email" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
+                <input type="text" id="authPseudo" placeholder="Pseudo ou Email" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
                 <input type="password" id="authPassword" placeholder="Mot de passe" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
-                <button id="submit-classic" onclick="loginClassic()" class="w-full bg-[#0056b3] text-white py-3 rounded-2xl font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2">
-                    <span>Se connecter / Créer un compte</span>
-                </button>
+                <button id="submit-classic" onclick="loginClassic()" class="w-full bg-[#0056b3] text-white py-3 rounded-2xl font-bold hover:bg-blue-700 transition">Se connecter / S'inscrire</button>
             </div>
             <div class="flex items-center my-6">
                 <div class="flex-grow border-t border-gray-200"></div>
                 <span class="px-4 text-[10px] text-gray-400 font-bold uppercase tracking-widest">Ou continuer avec</span>
                 <div class="flex-grow border-t border-gray-200"></div>
             </div>
-            <button id="submit-github" onclick="loginProvider('github')" class="w-full flex items-center justify-center gap-3 border py-3 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 transition">
-                <svg id="github-icon" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.041-1.416-4.041-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                <span id="github-text">GitHub</span>
-            </button>
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="loginProvider('google')" class="p-3 border rounded-xl hover:bg-gray-50 flex justify-center"><img src="https://www.gstatic.com/images/branding/product/1x/googleg_48dp.png" class="w-5"></button>
+                <button onclick="loginProvider('github')" class="p-3 border rounded-xl hover:bg-gray-50 flex justify-center"><img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" class="w-5"></button>
+                <button onclick="loginProvider('facebook')" class="p-3 border rounded-xl hover:bg-gray-50 flex justify-center"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" class="w-5"></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal-overlay flex items-center justify-center p-4">
+        <div class="bg-white max-w-sm w-full rounded-3xl p-8 border">
+            <h2 class="text-2xl font-bold mb-6">Mon Profil</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase">Choisir un pseudo</label>
+                    <input type="text" id="set-username" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none mt-1">
+                </div>
+                <button onclick="updateProfile()" class="w-full bg-black text-white py-3 rounded-2xl font-bold">Sauvegarder</button>
+                <button onclick="closeSettings()" class="w-full text-gray-400 text-sm font-bold">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="userProfileModal" class="modal-overlay flex items-center justify-center p-4">
+        <div class="bg-white max-w-sm w-full rounded-3xl p-8 border text-center shadow-2xl">
+            <div id="profile-card-content"></div>
+            <button onclick="closeProfile()" class="mt-6 text-gray-400 font-bold text-sm">Fermer</button>
+        </div>
+    </div>
+
+    <div id="modModal" class="modal-overlay flex items-center justify-center p-4">
+        <div class="bg-white max-w-2xl w-full rounded-3xl p-8 border shadow-2xl max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-red-600">Panel Modération</h2>
+                <button onclick="closeMod()" class="text-gray-400 font-bold">Fermer</button>
+            </div>
+            <div id="mod-user-list" class="space-y-3"></div>
         </div>
     </div>
 
@@ -109,13 +130,10 @@
             </div>
             <div class="space-y-4">
                 <input type="text" id="artTitre" placeholder="Titre de l'actualité" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
-                <div class="grid grid-cols-2 gap-4">
-                    <select id="artRegion" class="p-4 border rounded-2xl bg-gray-50 outline-none font-semibold">
-                        <option value="France">France</option>
-                        <option value="Québec">Québec</option>
-                    </select>
-                    <input type="date" id="artDate" class="p-4 border rounded-2xl bg-gray-50 outline-none">
-                </div>
+                <select id="artRegion" class="p-4 border rounded-2xl bg-gray-50 outline-none font-semibold">
+                    <option value="France">France</option>
+                    <option value="Québec">Québec</option>
+                </select>
                 <textarea id="artContenu" rows="8" placeholder="Contenu de l'article..." class="w-full p-4 border rounded-2xl bg-gray-50 outline-none"></textarea>
                 <input type="text" id="artImage" placeholder="Lien de l'image (URL)" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
                 <button onclick="publierArticle()" class="w-full bg-[#0056b3] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition">Mettre en ligne</button>
@@ -132,83 +150,134 @@ const ADMIN_CODE = "MK-ADMIN-&4ScR0+75v";
 let articlesData = [];
 let currentFilter = 'Toutes';
 let currentArticleId = null;
-let currentUser = null;
+let userSession = null;
+let userProfile = null;
 
-// --- FONCTION SPINNER ---
-function toggleLoading(btnId, isLoading, originalHTML) {
-    const btn = document.getElementById(btnId);
-    if (isLoading) {
-        btn.classList.add('btn-loading');
-        btn.innerHTML = `<div class="spinner"></div>`;
-    } else {
-        btn.classList.remove('btn-loading');
-        btn.innerHTML = originalHTML;
-    }
-}
+const badgeCertif = `<svg class="certified-badge" viewBox="0 0 24 24" fill="currentColor"><path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.918-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.337 2.25c-.416-.165-.866-.25-1.336-.25-2.21 0-3.918 1.792-3.918 4 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.46.74 2.746 1.846 3.45-.065.36-.1.73-.1 1.1 0 2.21 1.71 4 3.918 4 .47 0 .92-.086 1.336-.25.52 1.335 1.828 2.25 3.337 2.25s2.816-.915 3.337-2.25c.416.164.866.25 1.336.25 2.21 0 3.918-1.792 3.918-4 0-.37-.035-.74-.1-1.1 1.106-.704 1.846-1.99 1.846-3.45zm-11.4 4.3l-3.8-3.8 1.4-1.4 2.4 2.4 6.4-6.4 1.4 1.4-7.8 7.8z"/></svg>`;
 
 // --- AUTHENTIFICATION ---
-supabaseClient.auth.onAuthStateChange((event, session) => {
-    console.log("Auth Event:", event);
+supabaseClient.auth.onAuthStateChange(async (event, session) => {
     if (session) {
-        currentUser = session.user.user_metadata.user_name || session.user.user_metadata.full_name || session.user.email.split('@');
-        document.getElementById('btn-login').innerText = "👤 " + currentUser;
+        userSession = session.user;
+        // Récupérer le profil personnalisé
+        const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userSession.id).single();
+        
+        if (!profile) {
+            // Créer le profil s'il n'existe pas
+            const defaultName = userSession.email.split('@')[0];
+            const { data: newProf } = await supabaseClient.from('profiles').insert([{ id: userSession.id, username: defaultName }]).select().single();
+            userProfile = newProf;
+        } else {
+            userProfile = profile;
+        }
+
+        document.getElementById('btn-login').innerText = "👤 " + userProfile.username;
         document.getElementById('btn-logout').classList.remove('hidden');
+        document.getElementById('btn-settings').classList.remove('hidden');
         closeAuth();
     } else {
-        currentUser = null;
-        document.getElementById('btn-login').innerText = "Connexion / Inscription";
+        userSession = null; userProfile = null;
+        document.getElementById('btn-login').innerText = "Connexion";
         document.getElementById('btn-logout').classList.add('hidden');
+        document.getElementById('btn-settings').classList.add('hidden');
     }
 });
 
 window.loginClassic = async function() {
-    const email = document.getElementById('authEmail').value;
+    let email = document.getElementById('authPseudo').value;
     const password = document.getElementById('authPassword').value;
-    if(!email || !password) return alert("Remplis les champs !");
+    if(!email.includes('@')) email = email + "@media.fr"; // Trick pour pseudo/mdp
 
-    const btn = "submit-classic";
-    const oldHTML = "Se connecter / Créer un compte";
-    toggleLoading(btn, true);
-
-    const { error: loginError } = await supabaseClient.auth.signInWithPassword({ email, password });
-    
-    if (loginError) {
-        // Si erreur, on tente l'inscription
-        const { error: signUpError } = await supabaseClient.auth.signUp({ email, password });
-        if (signUpError) {
-            alert("Erreur : " + signUpError.message);
-        } else {
-            alert("Compte créé ! Regardez vos emails pour confirmer (ou connectez-vous si la confirmation est désactivée).");
-        }
+    const { error: logErr } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (logErr) {
+        const { error: signErr } = await supabaseClient.auth.signUp({ email, password });
+        if (signErr) alert("Erreur: " + signErr.message); else alert("Compte créé !");
     }
-    toggleLoading(btn, false, oldHTML);
 };
 
 window.loginProvider = async (provider) => {
-    const btn = "submit-github";
-    const oldHTML = document.getElementById(btn).innerHTML;
-    toggleLoading(btn, true);
+    await supabaseClient.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin } });
+};
 
-    const { error } = await supabaseClient.auth.signInWithOAuth({
-        provider: provider,
-        options: { redirectTo: window.location.origin }
-    });
+window.updateProfile = async () => {
+    const newName = document.getElementById('set-username').value.trim();
+    if(!newName) return;
+    const { error } = await supabaseClient.from('profiles').update({ username: newName }).eq('id', userSession.id);
+    if(error) alert("Ce pseudo est déjà utilisé."); else location.reload();
+};
 
-    if (error) {
-        alert("Erreur GitHub : " + error.message);
-        toggleLoading(btn, false, oldHTML);
+window.logout = async () => { await supabaseClient.auth.signOut(); location.reload(); };
+
+// --- COMMENTAIRES ---
+window.loadComments = async (id) => {
+    // Jointure avec la table profiles pour avoir les pseudos et certifs à jour
+    const { data } = await supabaseClient.from('commentaires').select('*, profiles(username, is_certified, id)').eq('article_id', id).order('created_at', { ascending: false });
+    
+    document.getElementById('comments-list').innerHTML = data.map(c => `
+        <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+            <div class="flex items-center cursor-pointer hover:underline text-blue-800" onclick="showPublicProfile('${c.profiles.id}')">
+                <strong class="text-xs">@${c.profiles.username}</strong>
+                ${c.profiles.is_certified ? badgeCertif : ''}
+            </div>
+            <p class="text-gray-700 mt-1">${c.contenu}</p>
+        </div>
+    `).join('') || '<i class="text-gray-400">Aucun commentaire.</i>';
+};
+
+window.postComment = async () => {
+    if (!userSession) return openAuth();
+    if (userProfile.is_banned) return alert("Vous êtes banni de l'espace commentaire.");
+    
+    const content = document.getElementById('new-comment').value.trim();
+    if (!content) return;
+
+    await supabaseClient.from('commentaires').insert([{ article_id: currentArticleId, user_id: userSession.id, contenu: content }]);
+    document.getElementById('new-comment').value = '';
+    loadComments(currentArticleId);
+};
+
+// --- PROFIL PUBLIC (Twitter Style) ---
+window.showPublicProfile = async (id) => {
+    const { data: p } = await supabaseClient.from('profiles').select('*').eq('id', id).single();
+    document.getElementById('profile-card-content').innerHTML = `
+        <div class="w-20 h-20 bg-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl font-bold text-blue-600">
+            ${p.username[0].toUpperCase()}
+        </div>
+        <h3 class="text-xl font-bold flex items-center justify-center">@${p.username} ${p.is_certified ? badgeCertif : ''}</h3>
+        <p class="text-gray-400 text-sm mb-4">${p.is_certified ? 'Compte Officiel' : 'Citoyen'}</p>
+        <button onclick="alert('DM bientôt disponible !')" class="w-full bg-[#0056b3] text-white py-2 rounded-xl font-bold shadow-md">Envoyer un Message (DM)</button>
+    `;
+    document.getElementById('userProfileModal').style.display = 'flex';
+};
+
+// --- MODÉRATION (Shift + B) ---
+window.loadModUsers = async () => {
+    const { data } = await supabaseClient.from('profiles').select('*').order('username');
+    document.getElementById('mod-user-list').innerHTML = data.map(u => `
+        <div class="flex justify-between items-center p-3 border rounded-xl bg-gray-50 text-xs">
+            <div><b>@${u.username}</b><br><span class="text-[9px] text-gray-400">${u.id}</span></div>
+            <div class="flex gap-1">
+                <button onclick="toggleBan('${u.id}', ${u.is_banned})" class="bg-orange-100 px-2 py-1 rounded font-bold">${u.is_banned ? 'Déban' : 'Bannir'}</button>
+                <button onclick="toggleCertif('${u.id}', ${u.is_certified})" class="bg-blue-100 px-2 py-1 rounded font-bold">${u.is_certified ? 'Dé-Certif' : 'Certifier'}</button>
+                <button onclick="deleteUser('${u.id}')" class="bg-red-600 text-white px-2 py-1 rounded">X</button>
+            </div>
+        </div>
+    `).join('');
+};
+
+window.toggleBan = async (id, s) => { await supabaseClient.from('profiles').update({ is_banned: !s }).eq('id', id); loadModUsers(); };
+window.toggleCertif = async (id, s) => { await supabaseClient.from('profiles').update({ is_certified: !s }).eq('id', id); loadModUsers(); };
+window.deleteUser = async (id) => { if(confirm("Supprimer ce compte ?")) { await supabaseClient.from('profiles').delete().eq('id', id); loadModUsers(); } };
+
+window.addEventListener('keydown', (e) => { 
+    if (e.shiftKey && e.key.toLowerCase() === 'a' && prompt("Code Admin :") === ADMIN_CODE) document.getElementById('adminModal').style.display = 'block';
+    if (e.shiftKey && e.key.toLowerCase() === 'b' && prompt("Code Modérateur :") === ADMIN_CODE) { 
+        document.getElementById('modModal').style.display = 'flex'; 
+        loadModUsers(); 
     }
-};
+});
 
-window.logout = async () => {
-    await supabaseClient.auth.signOut();
-    location.reload();
-};
-
-window.openAuth = () => document.getElementById('authModal').style.display = 'flex';
-window.closeAuth = () => document.getElementById('authModal').style.display = 'none';
-
-// --- ARTICLES ---
+// --- ARTICLES & NAVIGATION ---
 window.loadArticles = async () => {
     const { data } = await supabaseClient.from('articles').select('*').order('created_at', { ascending: false });
     if (data) { articlesData = data; render(); }
@@ -236,23 +305,11 @@ window.viewArticle = (id) => {
     document.getElementById('grid-view').classList.add('hidden');
     document.getElementById('nav-bar').classList.add('hidden');
     document.getElementById('full-view').classList.remove('hidden');
-    document.getElementById('full-content').innerHTML = `
-        <h1 class="text-3xl font-bold mb-4">${art.titre}</h1>
-        <img src="${art.image}" class="w-full h-80 object-cover rounded-2xl mb-8 shadow-inner">
-        <div class="text-gray-800 leading-relaxed text-lg whitespace-pre-wrap">${art.contenu}</div>
-    `;
-    renderVotes(art);
-    loadComments(id);
-    window.scrollTo(0,0);
+    document.getElementById('full-content').innerHTML = `<h1 class="text-3xl font-bold mb-4">${art.titre}</h1><img src="${art.image}" class="w-full h-80 object-cover rounded-2xl mb-8 shadow-inner"><div class="text-gray-800 leading-relaxed text-lg whitespace-pre-wrap">${art.contenu}</div>`;
+    renderVotes(art); loadComments(id); window.scrollTo(0,0);
 };
 
-window.closeArticle = () => {
-    document.getElementById('grid-view').classList.remove('hidden');
-    document.getElementById('nav-bar').classList.remove('hidden');
-    document.getElementById('full-view').classList.add('hidden');
-};
-
-// --- VOTES ---
+// Logique Votes (Inchangée)
 function renderVotes(art) {
     const myVote = localStorage.getItem('v_' + art.id);
     document.getElementById('vote-section').innerHTML = `
@@ -263,62 +320,28 @@ function renderVotes(art) {
 
 window.voteArticle = async (id, type) => {
     const art = articlesData.find(a => a.id === id);
-    const key = 'v_' + id;
-    const old = localStorage.getItem(key);
+    const key = 'v_' + id; const old = localStorage.getItem(key);
     let up = art.likes || 0, down = art.dislikes || 0;
-
     if (old === type) { type === 'up' ? up-- : down--; localStorage.removeItem(key); }
     else { if (old === 'up') up--; if (old === 'down') down--; type === 'up' ? up++ : down++; localStorage.setItem(key, type); }
-
     art.likes = Math.max(0, up); art.dislikes = Math.max(0, down);
     renderVotes(art);
     await supabaseClient.from('articles').update({ likes: art.likes, dislikes: art.dislikes }).eq('id', id);
 };
 
-// --- COMMENTAIRES ---
-window.loadComments = async (id) => {
-    const { data } = await supabaseClient.from('commentaires').select('*').eq('article_id', id).order('created_at', { ascending: false });
-    document.getElementById('comments-list').innerHTML = data.map(c => `
-        <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
-            <strong class="text-blue-700 text-xs">@${c.pseudo}</strong>
-            <p class="text-gray-700 mt-1">${c.contenu}</p>
-        </div>
-    `).join('') || '<i class="text-gray-400">Soyez le premier à commenter !</i>';
-};
-
-window.postComment = async () => {
-    if (!currentUser) return openAuth();
-    const btn = "btn-post-comment";
-    const oldHTML = "Publier";
-    const content = document.getElementById('new-comment').value.trim();
-    if (!content) return;
-
-    toggleLoading(btn, true);
-    await supabaseClient.from('commentaires').insert([{ article_id: currentArticleId, pseudo: currentUser, contenu: content }]);
-    document.getElementById('new-comment').value = '';
-    await loadComments(currentArticleId);
-    toggleLoading(btn, false, oldHTML);
-};
-
-window.filterRegion = (r) => { 
-    currentFilter = r; 
-    document.querySelectorAll('.region-btn').forEach(b => b.classList.toggle('active-tab', b.innerText.includes(r)));
-    window.closeArticle(); 
-    render(); 
-};
-
-window.addEventListener('keydown', (e) => { 
-    if (e.shiftKey && e.key.toLowerCase() === 'a') {
-        if (prompt("Entrez le code administrateur :") === ADMIN_CODE) document.getElementById('adminModal').style.display = 'block';
-    }
-});
-
+// Fonctions d'ouverture/fermeture
+window.openAuth = () => document.getElementById('authModal').style.display = 'flex';
+window.closeAuth = () => document.getElementById('authModal').style.display = 'none';
+window.openSettings = () => { document.getElementById('set-username').value = userProfile.username; document.getElementById('settingsModal').style.display = 'flex'; };
+window.closeSettings = () => document.getElementById('settingsModal').style.display = 'none';
+window.closeProfile = () => document.getElementById('userProfileModal').style.display = 'none';
+window.closeMod = () => document.getElementById('modModal').style.display = 'none';
 window.closeAdmin = () => document.getElementById('adminModal').style.display = 'none';
-
+window.closeArticle = () => { document.getElementById('grid-view').classList.remove('hidden'); document.getElementById('nav-bar').classList.remove('hidden'); document.getElementById('full-view').classList.add('hidden'); };
+window.filterRegion = (r) => { currentFilter = r; document.querySelectorAll('.region-btn').forEach(b => b.classList.toggle('active-tab', b.innerText.includes(r))); closeArticle(); render(); };
 window.publierArticle = async () => {
     const a = { titre: document.getElementById('artTitre').value, region: document.getElementById('artRegion').value, contenu: document.getElementById('artContenu').value, image: document.getElementById('artImage').value || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800' };
-    await supabaseClient.from('articles').insert([a]);
-    location.reload();
+    await supabaseClient.from('articles').insert([a]); location.reload();
 };
 
 window.onload = () => window.loadArticles();
