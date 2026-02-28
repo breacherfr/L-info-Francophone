@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'info Francophone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; }
+        .active-tab { background-color: #0056b3 !important; color: white !important; }
+        .region-btn { transition: all 0.2s; border: 1px solid #e2e8f0; background: white; color: #64748b; }
+        .locked { opacity: 0.5; cursor: not-allowed; background: #f1f5f9; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; backdrop-filter: blur(4px); }
+        .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        main { flex: 1; }
+    </style>
+</head>
+<body>
+
+    <header class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.reload()">
+            <div class="bg-[#0056b3] p-2 rounded-lg text-white shadow-md">
+                <span class="text-xl font-bold">⚜</span>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-[#1e293b]">L'info Francophone</h1>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Actualités internationales</p>
+            </div>
+        </div>
+    </header>
+
+    <nav id="nav-bar" class="flex gap-2 px-6 py-4 overflow-x-auto bg-white border-b sticky top-[73px] z-40 no-scrollbar">
+        <button onclick="filterRegion('Toutes')" class="region-btn active-tab px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap">Toutes les régions</button>
+        <button onclick="filterRegion('France')" class="region-btn px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap">France</button>
+        <button onclick="filterRegion('Québec')" class="region-btn px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap">Québec</button>
+        <button class="region-btn locked px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap">Belgique 🔒</button>
+        <button class="region-btn locked px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap">Suisse 🔒</button>
+        <button class="region-btn locked px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap">Martinique 🔒</button>
+    </nav>
+
+    <main class="max-w-6xl mx-auto w-full p-6">
+        <div id="grid-view">
+            <div id="articles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            <div id="loader-msg" class="text-center py-20 text-gray-400 font-medium">Chargement des actualités...</div>
+        </div>
+
+        <div id="full-view" class="hidden max-w-3xl mx-auto bg-white rounded-3xl shadow-sm border p-8 my-6 animate-in fade-in duration-300">
+            <button onclick="closeArticle()" class="text-blue-600 font-bold mb-8 flex items-center gap-2 hover:translate-x-[-4px] transition-transform">← Retour aux actualités</button>
+            <div id="full-content"></div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t py-10 text-center">
+        <p class="text-gray-400 text-sm font-medium">© 2026 L'info Francophone. Tous droits réservés.</p>
+        <p class="text-[10px] text-gray-300 uppercase mt-2">Information certifiée</p>
+    </footer>
+
+    <div id="adminModal" class="modal-overlay overflow-y-auto pt-10 pb-20">
+        <div class="bg-white max-w-2xl mx-auto rounded-3xl shadow-2xl p-8 border">
+            <div class="flex justify-between items-center mb-8 border-b pb-4">
+                <h2 class="text-2xl font-bold text-gray-800">Espace Rédaction</h2>
+                <button onclick="closeAdmin()" class="text-gray-400 hover:text-red-500 font-bold">Quitter</button>
+            </div>
+
+            <div class="space-y-4">
+                <input type="text" id="artTitre" placeholder="Titre de l'article" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="grid grid-cols-2 gap-4">
+                    <select id="artRegion" class="p-4 border rounded-2xl bg-gray-50 outline-none">
+                        <option value="France">France</option>
+                        <option value="Québec">Québec</option>
+                    </select>
+                    <input type="date" id="artDate" class="p-4 border rounded-2xl bg-gray-50 outline-none">
+                </div>
+                <textarea id="artResume" rows="2" placeholder="Résumé court pour la carte" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none"></textarea>
+                <textarea id="artContenu" rows="6" placeholder="Contenu complet de l'article" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none"></textarea>
+                <input type="text" id="artImage" placeholder="URL de l'image" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
+                
+                <button onclick="publierArticle()" id="btn-publier" class="w-full bg-[#0056b3] text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100">Publier l'article</button>
+            </div>
+
+            <div class="mt-10 pt-8 border-t">
+                <h3 class="font-bold text-gray-800 mb-4">Gestion des articles en ligne</h3>
+                <div id="admin-list" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION SUPABASE ---
+        const SUPABASE_URL = 'sb_publishable_pS9xdKAnm67sAinUrm9WcQ_2tPVfdWo';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eGF6YWxla3RnZ2tia2VhYWZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNzIzMDEsImV4cCI6MjA4Nzg0ODMwMX0.5VhDqn80TiofCbTOdM4GXUrUIkwqpG7RX986Ri9S8sM';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const ADMIN_CODE = "MK-ADMIN-&4ScR0+75v";
+        let articlesData = [];
+        let currentFilter = 'Toutes';
+
+        // Chargement initial
+        window.onload = loadArticles;
+
+        // Raccourci Admin
+        window.addEventListener('keydown', (e) => {
+            if (e.shiftKey && e.key.toLowerCase() === 'a') {
+                const code = prompt("Veuillez entrer le code d'accès :");
+                if (code === ADMIN_CODE) {
+                    openAdmin();
+                } else if (code !== null) {
+                    alert("Code incorrect.");
+                }
+            }
+        });
+
+        async function loadArticles() {
+            document.getElementById('loader-msg').style.display = 'block';
+            const { data, error } = await supabase.from('articles').select('*').order('created_at', { ascending: false });
+            
+            if (data) {
+                articlesData = data;
+                render();
+            }
+            document.getElementById('loader-msg').style.display = 'none';
+        }
+
+        async function publierArticle() {
+            const btn = document.getElementById('btn-publier');
+            const newArt = {
+                titre: document.getElementById('artTitre').value,
+                region: document.getElementById('artRegion').value,
+                date_manuelle: document.getElementById('artDate').value || new Date().toISOString().split('T')[0],
+                resume: document.getElementById('artResume').value,
+                contenu: document.getElementById('artContenu').value,
+                image: document.getElementById('artImage').value || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800'
+            };
+
+            if(!newArt.titre || !newArt.contenu) return alert("Le titre et le contenu sont obligatoires.");
+
+            btn.innerText = "Publication...";
+            btn.disabled = true;
+
+            const { error } = await supabase.from('articles').insert([newArt]);
+            
+            if (!error) {
+                alert("Article publié avec succès !");
+                clearForm();
+                loadArticles();
+                closeAdmin();
+            }
+            btn.innerText = "Publier l'article";
+            btn.disabled = false;
+        }
+
+        async function supprimerArticle(id) {
+            if(confirm("Supprimer définitivement cet article ?")) {
+                await supabase.from('articles').delete().eq('id', id);
+                loadArticles();
+            }
+        }
+
+        function render() {
+            const grid = document.getElementById('articles-grid');
+            const filtered = currentFilter === 'Toutes' ? articlesData : articlesData.filter(a => a.region === currentFilter);
+            
+            grid.innerHTML = filtered.map(art => `
+                <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group" onclick="viewArticle(${art.id})">
+                    <div class="h-52 overflow-hidden">
+                        <img src="${art.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="bg-blue-50 text-[#0056b3] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">${art.region}</span>
+                            <span class="text-[10px] text-gray-400 font-bold">${art.date_manuelle}</span>
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-lg leading-snug mb-3 group-hover:text-blue-700">${art.titre}</h3>
+                        <p class="text-gray-500 text-sm line-clamp-3 leading-relaxed mb-4">${art.resume}</p>
+                        <button class="text-[#0056b3] text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">Lire l'article →</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Liste Admin
+            document.getElementById('admin-list').innerHTML = articlesData.map(a => `
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border">
+                    <span class="text-sm font-medium truncate max-w-[70%]">${a.titre}</span>
+                    <button onclick="supprimerArticle(${a.id})" class="text-red-500 font-bold text-xs bg-white px-3 py-1 rounded-lg border hover:bg-red-50">Supprimer</button>
+                </div>
+            `).join('');
+        }
+
+        function filterRegion(region) {
+            currentFilter = region;
+            // Update UI boutons
+            document.querySelectorAll('.region-btn').forEach(btn => {
+                btn.classList.remove('active-tab');
+                if (btn.innerText.includes(region) || (region === 'Toutes' && btn.innerText.includes('Toutes'))) {
+                    btn.classList.add('active-tab');
+                }
+            });
+            closeArticle();
+            render();
+        }
+
+        function viewArticle(id) {
+            const art = articlesData.find(a => a.id === id);
+            document.getElementById('grid-view').classList.add('hidden');
+            document.getElementById('nav-bar').classList.add('hidden');
+            document.getElementById('full-view').classList.remove('hidden');
+            
+            document.getElementById('full-content').innerHTML = `
+                <img src="${art.image}" class="w-full h-80 object-cover rounded-3xl mb-8 shadow-lg">
+                <p class="text-blue-600 font-black text-xs uppercase tracking-widest mb-2">${art.region} — ${art.date_manuelle}</p>
+                <h1 class="text-4xl font-black text-gray-900 leading-tight mb-6">${art.titre}</h1>
+                <div class="text-xl font-medium text-gray-500 border-l-4 border-blue-500 pl-6 mb-8 italic">${art.resume}</div>
+                <div class="text-gray-800 leading-loose text-lg whitespace-pre-wrap">${art.contenu}</div>
+            `;
+            window.scrollTo(0, 0);
+        }
+
+        function closeArticle() {
+            document.getElementById('grid-view').classList.remove('hidden');
+            document.getElementById('nav-bar').classList.remove('hidden');
+            document.getElementById('full-view').classList.add('hidden');
+        }
+
+        function openAdmin() { 
+            document.getElementById('adminModal').style.display = 'block';
+            document.getElementById('artDate').valueAsDate = new Date();
+        }
+        function closeAdmin() { document.getElementById('adminModal').style.display = 'none'; }
+        function clearForm() {
+            ['artTitre', 'artResume', 'artContenu', 'artImage'].forEach(id => document.getElementById(id).value = '');
+        }
+    </script>
+</body>
+</html>
