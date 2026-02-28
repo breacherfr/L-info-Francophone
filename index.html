@@ -14,9 +14,21 @@
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; backdrop-filter: blur(4px); }
         main { flex: 1; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; display: inline-block; }
+        
+        /* Animation du Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            display: inline-block;
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .certified-badge { color: #1d9bf0; display: inline-flex; align-items: center; width: 14px; margin-left: 4px; vertical-align: middle; }
+        
+        /* Bouton en mode chargement */
+        .btn-loading { pointer-events: none; opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -32,13 +44,7 @@
             </div>
         </div>
         <div class="flex gap-2 items-center">
-            <button onclick="openSettings()" id="btn-settings" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-600 p-2 rounded-xl transition shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            </button>
-            <button onclick="openAuth()" id="btn-login" class="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-bold py-2 px-4 rounded-xl transition">Connexion</button>
+            <button onclick="openAuth()" id="btn-login" class="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-bold py-2 px-4 rounded-xl transition">Connexion / Inscription</button>
             <button onclick="logout()" id="btn-logout" class="hidden bg-red-50 text-red-600 text-sm font-bold py-2 px-4 rounded-xl hover:bg-red-100 transition">Déconnexion</button>
         </div>
     </header>
@@ -62,7 +68,7 @@
                 <div class="flex gap-4 mb-8" id="vote-section"></div>
                 <h3 class="font-bold text-xl mb-4">Commentaires</h3>
                 <div class="bg-gray-50 p-4 rounded-2xl mb-6">
-                    <textarea id="new-comment" rows="3" class="w-full bg-white border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 mb-3" placeholder="Exprimez-vous..."></textarea>
+                    <textarea id="new-comment" rows="3" class="w-full bg-white border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 mb-3" placeholder="Exprimez-vous... (Connexion requise)"></textarea>
                     <button id="btn-post-comment" onclick="postComment()" class="bg-[#0056b3] text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-600 transition">Publier</button>
                 </div>
                 <div id="comments-list" class="space-y-4 text-sm"></div>
@@ -72,116 +78,135 @@
 
     <div id="authModal" class="modal-overlay flex items-center justify-center p-4">
         <div class="bg-white max-w-sm w-full rounded-3xl shadow-2xl p-8 border">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Connexion</h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Votre Compte</h2>
+                <button onclick="closeAuth()" class="text-gray-400 hover:text-red-500 font-bold">X</button>
+            </div>
             <div class="space-y-3">
                 <input type="email" id="authEmail" placeholder="Email" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
                 <input type="password" id="authPassword" placeholder="Mot de passe" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
-                <button onclick="loginClassic()" class="w-full bg-[#0056b3] text-white py-3 rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg">Se connecter / S'inscrire</button>
-                <button onclick="closeAuth()" class="w-full text-gray-400 font-bold py-2">Annuler</button>
+                <button id="submit-classic" onclick="loginClassic()" class="w-full bg-[#0056b3] text-white py-3 rounded-2xl font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                    <span>Se connecter / Créer un compte</span>
+                </button>
             </div>
+            <div class="flex items-center my-6">
+                <div class="flex-grow border-t border-gray-200"></div>
+                <span class="px-4 text-[10px] text-gray-400 font-bold uppercase tracking-widest">Ou continuer avec</span>
+                <div class="flex-grow border-t border-gray-200"></div>
+            </div>
+            <button id="submit-github" onclick="loginProvider('github')" class="w-full flex items-center justify-center gap-3 border py-3 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 transition">
+                <svg id="github-icon" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.041-1.416-4.041-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                <span id="github-text">GitHub</span>
+            </button>
         </div>
     </div>
 
-    <div id="settingsModal" class="modal-overlay flex items-center justify-center p-4">
-        <div class="bg-white max-w-sm w-full rounded-3xl p-8 border shadow-2xl">
-            <h2 class="text-2xl font-bold mb-6">Paramètres Profil</h2>
+    <div id="adminModal" class="modal-overlay overflow-y-auto pt-10 pb-20">
+        <div class="bg-white max-w-2xl mx-auto rounded-3xl shadow-2xl p-8 border">
+            <div class="flex justify-between items-center mb-8 border-b pb-4">
+                <h2 class="text-2xl font-bold text-gray-800">Publier un Article</h2>
+                <button onclick="closeAdmin()" class="text-gray-400 hover:text-red-500 font-bold">Quitter</button>
+            </div>
             <div class="space-y-4">
-                <label class="text-xs font-bold text-gray-400 uppercase">Mon Pseudo</label>
-                <input type="text" id="set-username" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
-                <button onclick="updateProfile()" class="w-full bg-black text-white py-3 rounded-2xl font-bold">Enregistrer</button>
-                <button onclick="closeSettings()" class="w-full text-gray-400 text-sm font-bold">Fermer</button>
+                <input type="text" id="artTitre" placeholder="Titre de l'actualité" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
+                <div class="grid grid-cols-2 gap-4">
+                    <select id="artRegion" class="p-4 border rounded-2xl bg-gray-50 outline-none font-semibold">
+                        <option value="France">France</option>
+                        <option value="Québec">Québec</option>
+                    </select>
+                    <input type="date" id="artDate" class="p-4 border rounded-2xl bg-gray-50 outline-none">
+                </div>
+                <textarea id="artContenu" rows="8" placeholder="Contenu de l'article..." class="w-full p-4 border rounded-2xl bg-gray-50 outline-none"></textarea>
+                <input type="text" id="artImage" placeholder="Lien de l'image (URL)" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
+                <button onclick="publierArticle()" class="w-full bg-[#0056b3] text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition">Mettre en ligne</button>
             </div>
-        </div>
-    </div>
-
-    <div id="modModal" class="modal-overlay flex items-center justify-center p-4">
-        <div class="bg-white max-w-2xl w-full rounded-3xl p-8 border shadow-2xl overflow-y-auto max-h-[80vh]">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-red-600">Espace Modération</h2>
-                <button onclick="closeMod()" class="text-gray-400 font-bold">Fermer</button>
-            </div>
-            <div id="mod-user-list" class="space-y-3"></div>
         </div>
     </div>
 
     <script>
-// --- CONFIGURATION ---
 const SUPABASE_URL = 'https://yyxazalektggkbkeaafn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eGF6YWxla3RnZ2tia2VhYWZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNzIzMDEsImV4cCI6MjA4Nzg0ODMwMX0.5VhDqn80TiofCbTOdM4GXUrUIkwqpG7RX986Ri9S8sM';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const ADMIN_CODE = "MK-ADMIN-&4ScR0+75v";
-const badgeCertif = `<svg class="certified-badge" viewBox="0 0 24 24" fill="currentColor"><path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.918-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.337 2.25c-.416-.165-.866-.25-1.336-.25-2.21 0-3.918 1.792-3.918 4 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.46.74 2.746 1.846 3.45-.065.36-.1.73-.1 1.1 0 2.21 1.71 4 3.918 4 .47 0 .92-.086 1.336-.25.52 1.335 1.828 2.25 3.337 2.25s2.816-.915 3.337-2.25c.416.164.866.25 1.336.25 2.21 0 3.918-1.792 3.918-4 0-.37-.035-.74-.1-1.1 1.106-.704 1.846-1.99 1.846-3.45zm-11.4 4.3l-3.8-3.8 1.4-1.4 2.4 2.4 6.4-6.4 1.4 1.4-7.8 7.8z"/></svg>`;
-
 let articlesData = [];
 let currentFilter = 'Toutes';
 let currentArticleId = null;
-let userSession = null;
-let userProfile = null;
+let currentUser = null;
 
-// --- AUTH ---
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
+// --- FONCTION SPINNER ---
+function toggleLoading(btnId, isLoading, originalHTML) {
+    const btn = document.getElementById(btnId);
+    if (isLoading) {
+        btn.classList.add('btn-loading');
+        btn.innerHTML = `<div class="spinner"></div>`;
+    } else {
+        btn.classList.remove('btn-loading');
+        btn.innerHTML = originalHTML;
+    }
+}
+
+// --- AUTHENTIFICATION ---
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    console.log("Auth Event:", event);
     if (session) {
-        userSession = session.user;
-        const { data: prof } = await supabaseClient.from('profiles').select('*').eq('id', userSession.id).single();
-        if(!prof) {
-            const { data: newProf } = await supabaseClient.from('profiles').insert([{ id: userSession.id, username: userSession.email.split('@')[0] }]).select().single();
-            userProfile = newProf;
-        } else { userProfile = prof; }
-
-        document.getElementById('btn-login').innerText = "👤 " + userProfile.username;
+        currentUser = session.user.user_metadata.user_name || session.user.user_metadata.full_name || session.user.email.split('@');
+        document.getElementById('btn-login').innerText = "👤 " + currentUser;
         document.getElementById('btn-logout').classList.remove('hidden');
-        document.getElementById('btn-settings').classList.remove('hidden');
         closeAuth();
     } else {
-        userSession = null; userProfile = null;
-        document.getElementById('btn-login').innerText = "Connexion";
+        currentUser = null;
+        document.getElementById('btn-login').innerText = "Connexion / Inscription";
         document.getElementById('btn-logout').classList.add('hidden');
-        document.getElementById('btn-settings').classList.add('hidden');
     }
 });
 
-window.loginClassic = async () => {
+window.loginClassic = async function() {
     const email = document.getElementById('authEmail').value;
     const password = document.getElementById('authPassword').value;
-    const { error: logErr } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (logErr) {
-        const { error: signErr } = await supabaseClient.auth.signUp({ email, password });
-        if (signErr) alert(signErr.message); else alert("Compte créé !");
+    if(!email || !password) return alert("Remplis les champs !");
+
+    const btn = "submit-classic";
+    const oldHTML = "Se connecter / Créer un compte";
+    toggleLoading(btn, true);
+
+    const { error: loginError } = await supabaseClient.auth.signInWithPassword({ email, password });
+    
+    if (loginError) {
+        // Si erreur, on tente l'inscription
+        const { error: signUpError } = await supabaseClient.auth.signUp({ email, password });
+        if (signUpError) {
+            alert("Erreur : " + signUpError.message);
+        } else {
+            alert("Compte créé ! Regardez vos emails pour confirmer (ou connectez-vous si la confirmation est désactivée).");
+        }
+    }
+    toggleLoading(btn, false, oldHTML);
+};
+
+window.loginProvider = async (provider) => {
+    const btn = "submit-github";
+    const oldHTML = document.getElementById(btn).innerHTML;
+    toggleLoading(btn, true);
+
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: provider,
+        options: { redirectTo: window.location.origin }
+    });
+
+    if (error) {
+        alert("Erreur GitHub : " + error.message);
+        toggleLoading(btn, false, oldHTML);
     }
 };
 
-window.logout = async () => { await supabaseClient.auth.signOut(); location.reload(); };
-
-// --- ACTIONS ---
-window.updateProfile = async () => {
-    const name = document.getElementById('set-username').value.trim();
-    if(name) {
-        await supabaseClient.from('profiles').update({ username: name }).eq('id', userSession.id);
-        location.reload();
-    }
+window.logout = async () => {
+    await supabaseClient.auth.signOut();
+    location.reload();
 };
 
-window.loadComments = async (id) => {
-    const { data } = await supabaseClient.from('commentaires').select('*, profiles(username, is_certified)').eq('article_id', id).order('created_at', { ascending: false });
-    document.getElementById('comments-list').innerHTML = data.map(c => `
-        <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
-            <strong class="text-xs text-blue-800">@${c.profiles.username} ${c.profiles.is_certified ? badgeCertif : ''}</strong>
-            <p class="text-gray-700 mt-1">${c.contenu}</p>
-        </div>
-    `).join('') || '<i class="text-gray-400">Aucun commentaire.</i>';
-};
-
-window.postComment = async () => {
-    if (!userSession) return openAuth();
-    if (userProfile.is_banned) return alert("Accès refusé.");
-    const content = document.getElementById('new-comment').value.trim();
-    if (content) {
-        await supabaseClient.from('commentaires').insert([{ article_id: currentArticleId, user_id: userSession.id, contenu: content }]);
-        document.getElementById('new-comment').value = '';
-        loadComments(currentArticleId);
-    }
-};
+window.openAuth = () => document.getElementById('authModal').style.display = 'flex';
+window.closeAuth = () => document.getElementById('authModal').style.display = 'none';
 
 // --- ARTICLES ---
 window.loadArticles = async () => {
@@ -199,6 +224,7 @@ function render() {
             <div class="p-6">
                 <span class="bg-blue-50 text-[#0056b3] text-[10px] font-black px-3 py-1 rounded-full uppercase">${art.region}</span>
                 <h3 class="font-bold text-gray-800 text-lg my-3">${art.titre}</h3>
+                <div class="flex gap-3 text-xs text-gray-400 font-bold"><span>👍 ${art.likes || 0}</span><span>👎 ${art.dislikes || 0}</span></div>
             </div>
         </div>
     `).join('');
@@ -210,25 +236,90 @@ window.viewArticle = (id) => {
     document.getElementById('grid-view').classList.add('hidden');
     document.getElementById('nav-bar').classList.add('hidden');
     document.getElementById('full-view').classList.remove('hidden');
-    document.getElementById('full-content').innerHTML = `<h1 class="text-3xl font-bold mb-4">${art.titre}</h1><img src="${art.image}" class="w-full h-80 object-cover rounded-2xl mb-8"><div class="text-gray-800 text-lg whitespace-pre-wrap">${art.contenu}</div>`;
-    loadComments(id); window.scrollTo(0,0);
+    document.getElementById('full-content').innerHTML = `
+        <h1 class="text-3xl font-bold mb-4">${art.titre}</h1>
+        <img src="${art.image}" class="w-full h-80 object-cover rounded-2xl mb-8 shadow-inner">
+        <div class="text-gray-800 leading-relaxed text-lg whitespace-pre-wrap">${art.contenu}</div>
+    `;
+    renderVotes(art);
+    loadComments(id);
+    window.scrollTo(0,0);
 };
 
-// --- NAVIGATION ---
-window.openAuth = () => document.getElementById('authModal').style.display = 'flex';
-window.closeAuth = () => document.getElementById('authModal').style.display = 'none';
-window.openSettings = () => { document.getElementById('set-username').value = userProfile.username; document.getElementById('settingsModal').style.display = 'flex'; };
-window.closeSettings = () => document.getElementById('settingsModal').style.display = 'none';
-window.closeMod = () => document.getElementById('modModal').style.display = 'none';
-window.closeArticle = () => { document.getElementById('grid-view').classList.remove('hidden'); document.getElementById('nav-bar').classList.remove('hidden'); document.getElementById('full-view').classList.add('hidden'); };
-window.filterRegion = (r) => { currentFilter = r; document.querySelectorAll('.region-btn').forEach(b => b.classList.toggle('active-tab', b.innerText.includes(r))); closeArticle(); render(); };
+window.closeArticle = () => {
+    document.getElementById('grid-view').classList.remove('hidden');
+    document.getElementById('nav-bar').classList.remove('hidden');
+    document.getElementById('full-view').classList.add('hidden');
+};
 
-// Raccourci Shift+B pour la modération
-window.addEventListener('keydown', (e) => {
-    if (e.shiftKey && e.key.toLowerCase() === 'b' && prompt("Code Modérateur :") === ADMIN_CODE) {
-        document.getElementById('modModal').style.display = 'flex';
+// --- VOTES ---
+function renderVotes(art) {
+    const myVote = localStorage.getItem('v_' + art.id);
+    document.getElementById('vote-section').innerHTML = `
+        <button onclick="voteArticle(${art.id}, 'up')" class="flex items-center gap-2 px-6 py-2 rounded-xl font-bold transition ${myVote === 'up' ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700 hover:bg-green-100'}">👍 ${art.likes || 0}</button>
+        <button onclick="voteArticle(${art.id}, 'down')" class="flex items-center gap-2 px-6 py-2 rounded-xl font-bold transition ${myVote === 'down' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-700 hover:bg-red-100'}">👎 ${art.dislikes || 0}</button>
+    `;
+}
+
+window.voteArticle = async (id, type) => {
+    const art = articlesData.find(a => a.id === id);
+    const key = 'v_' + id;
+    const old = localStorage.getItem(key);
+    let up = art.likes || 0, down = art.dislikes || 0;
+
+    if (old === type) { type === 'up' ? up-- : down--; localStorage.removeItem(key); }
+    else { if (old === 'up') up--; if (old === 'down') down--; type === 'up' ? up++ : down++; localStorage.setItem(key, type); }
+
+    art.likes = Math.max(0, up); art.dislikes = Math.max(0, down);
+    renderVotes(art);
+    await supabaseClient.from('articles').update({ likes: art.likes, dislikes: art.dislikes }).eq('id', id);
+};
+
+// --- COMMENTAIRES ---
+window.loadComments = async (id) => {
+    const { data } = await supabaseClient.from('commentaires').select('*').eq('article_id', id).order('created_at', { ascending: false });
+    document.getElementById('comments-list').innerHTML = data.map(c => `
+        <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+            <strong class="text-blue-700 text-xs">@${c.pseudo}</strong>
+            <p class="text-gray-700 mt-1">${c.contenu}</p>
+        </div>
+    `).join('') || '<i class="text-gray-400">Soyez le premier à commenter !</i>';
+};
+
+window.postComment = async () => {
+    if (!currentUser) return openAuth();
+    const btn = "btn-post-comment";
+    const oldHTML = "Publier";
+    const content = document.getElementById('new-comment').value.trim();
+    if (!content) return;
+
+    toggleLoading(btn, true);
+    await supabaseClient.from('commentaires').insert([{ article_id: currentArticleId, pseudo: currentUser, contenu: content }]);
+    document.getElementById('new-comment').value = '';
+    await loadComments(currentArticleId);
+    toggleLoading(btn, false, oldHTML);
+};
+
+window.filterRegion = (r) => { 
+    currentFilter = r; 
+    document.querySelectorAll('.region-btn').forEach(b => b.classList.toggle('active-tab', b.innerText.includes(r)));
+    window.closeArticle(); 
+    render(); 
+};
+
+window.addEventListener('keydown', (e) => { 
+    if (e.shiftKey && e.key.toLowerCase() === 'a') {
+        if (prompt("Entrez le code administrateur :") === ADMIN_CODE) document.getElementById('adminModal').style.display = 'block';
     }
 });
+
+window.closeAdmin = () => document.getElementById('adminModal').style.display = 'none';
+
+window.publierArticle = async () => {
+    const a = { titre: document.getElementById('artTitre').value, region: document.getElementById('artRegion').value, contenu: document.getElementById('artContenu').value, image: document.getElementById('artImage').value || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800' };
+    await supabaseClient.from('articles').insert([a]);
+    location.reload();
+};
 
 window.onload = () => window.loadArticles();
     </script>
