@@ -88,10 +88,12 @@
         </div>
     </div>
 
-    <script>
+   <script>
         // --- CONFIGURATION SUPABASE ---
-        const SUPABASE_URL = 'sb_publishable_pS9xdKAnm67sAinUrm9WcQ_2tPVfdWo';
+        // ATTENTION : Remplace 'TON_ID_PROJET' par l'ID qui est dans ton URL Supabase
+        const SUPABASE_URL = 'https://yyxazalektggkbkaafn.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eGF6YWxla3RnZ2tia2VhYWZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNzIzMDEsImV4cCI6MjA4Nzg0ODMwMX0.5VhDqn80TiofCbTOdM4GXUrUIkwqpG7RX986Ri9S8sM';
+        
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const ADMIN_CODE = "MK-ADMIN-&4ScR0+75v";
@@ -106,7 +108,7 @@
             if (e.shiftKey && e.key.toLowerCase() === 'a') {
                 const code = prompt("Veuillez entrer le code d'accès :");
                 if (code === ADMIN_CODE) {
-                    openAdmin();
+                    window.openAdmin();
                 } else if (code !== null) {
                     alert("Code incorrect.");
                 }
@@ -114,17 +116,23 @@
         });
 
         async function loadArticles() {
-            document.getElementById('loader-msg').style.display = 'block';
-            const { data, error } = await supabase.from('articles').select('*').order('created_at', { ascending: false });
+            const loader = document.getElementById('loader-msg');
+            if(loader) loader.style.display = 'block';
             
-            if (data) {
-                articlesData = data;
-                render();
+            try {
+                const { data, error } = await supabase.from('articles').select('*').order('created_at', { ascending: false });
+                if (data) {
+                    articlesData = data;
+                    render();
+                }
+            } catch (err) {
+                console.error("Erreur de chargement:", err);
             }
-            document.getElementById('loader-msg').style.display = 'none';
+            
+            if(loader) loader.style.display = 'none';
         }
 
-        async function publierArticle() {
+        window.publierArticle = async function() {
             const btn = document.getElementById('btn-publier');
             const newArt = {
                 titre: document.getElementById('artTitre').value,
@@ -146,13 +154,15 @@
                 alert("Article publié avec succès !");
                 clearForm();
                 loadArticles();
-                closeAdmin();
+                window.closeAdmin();
+            } else {
+                alert("Erreur Supabase: " + error.message);
             }
             btn.innerText = "Publier l'article";
             btn.disabled = false;
         }
 
-        async function supprimerArticle(id) {
+        window.supprimerArticle = async function(id) {
             if(confirm("Supprimer définitivement cet article ?")) {
                 await supabase.from('articles').delete().eq('id', id);
                 loadArticles();
@@ -161,6 +171,8 @@
 
         function render() {
             const grid = document.getElementById('articles-grid');
+            if(!grid) return;
+
             const filtered = currentFilter === 'Toutes' ? articlesData : articlesData.filter(a => a.region === currentFilter);
             
             grid.innerHTML = filtered.map(art => `
@@ -180,32 +192,35 @@
                 </div>
             `).join('');
 
-            // Liste Admin
-            document.getElementById('admin-list').innerHTML = articlesData.map(a => `
-                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border">
-                    <span class="text-sm font-medium truncate max-w-[70%]">${a.titre}</span>
-                    <button onclick="supprimerArticle(${a.id})" class="text-red-500 font-bold text-xs bg-white px-3 py-1 rounded-lg border hover:bg-red-50">Supprimer</button>
-                </div>
-            `).join('');
+            const adminList = document.getElementById('admin-list');
+            if(adminList) {
+                adminList.innerHTML = articlesData.map(a => `
+                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border mb-2">
+                        <span class="text-sm font-medium truncate max-w-[70%]">${a.titre}</span>
+                        <button onclick="supprimerArticle(${a.id})" class="text-red-500 font-bold text-xs bg-white px-3 py-1 rounded-lg border hover:bg-red-50">Supprimer</button>
+                    </div>
+                `).join('');
+            }
         }
 
-        function filterRegion(region) {
+        window.filterRegion = function(region) {
             currentFilter = region;
-            // Update UI boutons
             document.querySelectorAll('.region-btn').forEach(btn => {
                 btn.classList.remove('active-tab');
                 if (btn.innerText.includes(region) || (region === 'Toutes' && btn.innerText.includes('Toutes'))) {
                     btn.classList.add('active-tab');
                 }
             });
-            closeArticle();
+            window.closeArticle();
             render();
         }
 
-        function viewArticle(id) {
+        window.viewArticle = function(id) {
             const art = articlesData.find(a => a.id === id);
+            if(!art) return;
             document.getElementById('grid-view').classList.add('hidden');
-            document.getElementById('nav-bar').classList.add('hidden');
+            const nav = document.getElementById('nav-bar');
+            if(nav) nav.classList.add('hidden');
             document.getElementById('full-view').classList.remove('hidden');
             
             document.getElementById('full-content').innerHTML = `
@@ -218,20 +233,32 @@
             window.scrollTo(0, 0);
         }
 
-        function closeArticle() {
+        window.closeArticle = function() {
             document.getElementById('grid-view').classList.remove('hidden');
-            document.getElementById('nav-bar').classList.remove('hidden');
+            const nav = document.getElementById('nav-bar');
+            if(nav) nav.classList.remove('hidden');
             document.getElementById('full-view').classList.add('hidden');
         }
 
-        function openAdmin() { 
-            document.getElementById('adminModal').style.display = 'block';
-            document.getElementById('artDate').valueAsDate = new Date();
+        window.openAdmin = function() { 
+            const modal = document.getElementById('adminModal');
+            if(modal) modal.style.display = 'block';
+            const dateInput = document.getElementById('artDate');
+            if(dateInput) dateInput.valueAsDate = new Date();
         }
-        function closeAdmin() { document.getElementById('adminModal').style.display = 'none'; }
+        
+        window.closeAdmin = function() { 
+            const modal = document.getElementById('adminModal');
+            if(modal) modal.style.display = 'none'; 
+        }
+
         function clearForm() {
-            ['artTitre', 'artResume', 'artContenu', 'artImage'].forEach(id => document.getElementById(id).value = '');
+            ['artTitre', 'artResume', 'artContenu', 'artImage'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.value = '';
+            });
         }
     </script>
 </body>
+
 </html>
