@@ -89,47 +89,83 @@
     </div>
 
    <script>
-        // --- CONFIGURATION SUPABASE ---
-        // ATTENTION : Remplace 'TON_ID_PROJET' par l'ID qui est dans ton URL Supabase
+        // --- CONFIGURATION ---
         const SUPABASE_URL = 'https://yyxazalektggkbkaafn.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eGF6YWxla3RnZ2tia2VhYWZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNzIzMDEsImV4cCI6MjA4Nzg0ODMwMX0.5VhDqn80TiofCbTOdM4GXUrUIkwqpG7RX986Ri9S8sM';
-        
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ON NE DÉCLARE supabase QU'UNE SEULE FOIS ICI
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const ADMIN_CODE = "MK-ADMIN-&4ScR0+75v";
         let articlesData = [];
         let currentFilter = 'Toutes';
 
-        // Chargement initial
-        window.onload = loadArticles;
-
-        // Raccourci Admin
-        window.addEventListener('keydown', (e) => {
-            if (e.shiftKey && e.key.toLowerCase() === 'a') {
-                const code = prompt("Veuillez entrer le code d'accès :");
-                if (code === ADMIN_CODE) {
-                    window.openAdmin();
-                } else if (code !== null) {
-                    alert("Code incorrect.");
+        // Fonctions Globales pour éviter les erreurs "not defined"
+        window.filterRegion = function(region) {
+            currentFilter = region;
+            document.querySelectorAll('.region-btn').forEach(btn => {
+                btn.classList.remove('active-tab');
+                if (btn.innerText.includes(region) || (region === 'Toutes' && btn.innerText.includes('Toutes'))) {
+                    btn.classList.add('active-tab');
                 }
-            }
-        });
+            });
+            window.closeArticle();
+            render();
+        };
 
-        async function loadArticles() {
+        window.loadArticles = async function() {
             const loader = document.getElementById('loader-msg');
             if(loader) loader.style.display = 'block';
             
             try {
-                const { data, error } = await supabase.from('articles').select('*').order('created_at', { ascending: false });
+                const { data, error } = await supabaseClient.from('articles').select('*').order('created_at', { ascending: false });
                 if (data) {
                     articlesData = data;
                     render();
                 }
+                if (error) console.error("Erreur Supabase:", error.message);
             } catch (err) {
-                console.error("Erreur de chargement:", err);
+                console.error("Erreur de connexion:", err);
             }
             
             if(loader) loader.style.display = 'none';
+        };
+
+        function render() {
+            const grid = document.getElementById('articles-grid');
+            if(!grid) return;
+
+            const filtered = currentFilter === 'Toutes' ? articlesData : articlesData.filter(a => a.region === currentFilter);
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-400 font-medium">Aucun article pour le moment.</div>';
+            } else {
+                grid.innerHTML = filtered.map(art => `
+                    <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all cursor-pointer group" onclick="viewArticle(${art.id})">
+                        <div class="h-52 overflow-hidden">
+                            <img src="${art.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="bg-blue-50 text-[#0056b3] text-[10px] font-black px-3 py-1 rounded-full uppercase">${art.region}</span>
+                                <span class="text-[10px] text-gray-400 font-bold">${art.date_manuelle || ''}</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 text-lg mb-3 group-hover:text-blue-700">${art.titre}</h3>
+                            <button class="text-[#0056b3] text-sm font-bold">Lire l'article →</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const adminList = document.getElementById('admin-list');
+            if(adminList) {
+                adminList.innerHTML = articlesData.map(a => `
+                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border mb-2">
+                        <span class="text-sm font-medium truncate max-w-[70%]">${a.titre}</span>
+                        <button onclick="supprimerArticle(${a.id})" class="text-red-500 font-bold text-xs">Supprimer</button>
+                    </div>
+                `).join('');
+            }
         }
 
         window.publierArticle = async function() {
@@ -143,122 +179,53 @@
                 image: document.getElementById('artImage').value || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800'
             };
 
-            if(!newArt.titre || !newArt.contenu) return alert("Le titre et le contenu sont obligatoires.");
-
-            btn.innerText = "Publication...";
-            btn.disabled = true;
-
-            const { error } = await supabase.from('articles').insert([newArt]);
-            
+            const { error } = await supabaseClient.from('articles').insert([newArt]);
             if (!error) {
-                alert("Article publié avec succès !");
-                clearForm();
-                loadArticles();
+                alert("Publié !");
+                window.loadArticles();
                 window.closeAdmin();
             } else {
-                alert("Erreur Supabase: " + error.message);
+                alert("Erreur: " + error.message);
             }
-            btn.innerText = "Publier l'article";
-            btn.disabled = false;
-        }
+        };
 
         window.supprimerArticle = async function(id) {
-            if(confirm("Supprimer définitivement cet article ?")) {
-                await supabase.from('articles').delete().eq('id', id);
-                loadArticles();
+            if(confirm("Supprimer ?")) {
+                await supabaseClient.from('articles').delete().eq('id', id);
+                window.loadArticles();
             }
-        }
+        };
 
-        function render() {
-            const grid = document.getElementById('articles-grid');
-            if(!grid) return;
-
-            const filtered = currentFilter === 'Toutes' ? articlesData : articlesData.filter(a => a.region === currentFilter);
-            
-            grid.innerHTML = filtered.map(art => `
-                <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group" onclick="viewArticle(${art.id})">
-                    <div class="h-52 overflow-hidden">
-                        <img src="${art.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                    </div>
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="bg-blue-50 text-[#0056b3] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">${art.region}</span>
-                            <span class="text-[10px] text-gray-400 font-bold">${art.date_manuelle}</span>
-                        </div>
-                        <h3 class="font-bold text-gray-800 text-lg leading-snug mb-3 group-hover:text-blue-700">${art.titre}</h3>
-                        <p class="text-gray-500 text-sm line-clamp-3 leading-relaxed mb-4">${art.resume}</p>
-                        <button class="text-[#0056b3] text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">Lire l'article →</button>
-                    </div>
-                </div>
-            `).join('');
-
-            const adminList = document.getElementById('admin-list');
-            if(adminList) {
-                adminList.innerHTML = articlesData.map(a => `
-                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border mb-2">
-                        <span class="text-sm font-medium truncate max-w-[70%]">${a.titre}</span>
-                        <button onclick="supprimerArticle(${a.id})" class="text-red-500 font-bold text-xs bg-white px-3 py-1 rounded-lg border hover:bg-red-50">Supprimer</button>
-                    </div>
-                `).join('');
-            }
-        }
-
-        window.filterRegion = function(region) {
-            currentFilter = region;
-            document.querySelectorAll('.region-btn').forEach(btn => {
-                btn.classList.remove('active-tab');
-                if (btn.innerText.includes(region) || (region === 'Toutes' && btn.innerText.includes('Toutes'))) {
-                    btn.classList.add('active-tab');
-                }
-            });
-            window.closeArticle();
-            render();
-        }
-
-        window.viewArticle = function(id) {
-            const art = articlesData.find(a => a.id === id);
-            if(!art) return;
-            document.getElementById('grid-view').classList.add('hidden');
-            const nav = document.getElementById('nav-bar');
-            if(nav) nav.classList.add('hidden');
-            document.getElementById('full-view').classList.remove('hidden');
-            
-            document.getElementById('full-content').innerHTML = `
-                <img src="${art.image}" class="w-full h-80 object-cover rounded-3xl mb-8 shadow-lg">
-                <p class="text-blue-600 font-black text-xs uppercase tracking-widest mb-2">${art.region} — ${art.date_manuelle}</p>
-                <h1 class="text-4xl font-black text-gray-900 leading-tight mb-6">${art.titre}</h1>
-                <div class="text-xl font-medium text-gray-500 border-l-4 border-blue-500 pl-6 mb-8 italic">${art.resume}</div>
-                <div class="text-gray-800 leading-loose text-lg whitespace-pre-wrap">${art.contenu}</div>
-            `;
-            window.scrollTo(0, 0);
-        }
-
+        window.openAdmin = function() { document.getElementById('adminModal').style.display = 'block'; };
+        window.closeAdmin = function() { document.getElementById('adminModal').style.display = 'none'; };
         window.closeArticle = function() {
             document.getElementById('grid-view').classList.remove('hidden');
             const nav = document.getElementById('nav-bar');
             if(nav) nav.classList.remove('hidden');
             document.getElementById('full-view').classList.add('hidden');
-        }
+        };
 
-        window.openAdmin = function() { 
-            const modal = document.getElementById('adminModal');
-            if(modal) modal.style.display = 'block';
-            const dateInput = document.getElementById('artDate');
-            if(dateInput) dateInput.valueAsDate = new Date();
-        }
-        
-        window.closeAdmin = function() { 
-            const modal = document.getElementById('adminModal');
-            if(modal) modal.style.display = 'none'; 
-        }
+        window.viewArticle = function(id) {
+            const art = articlesData.find(a => a.id === id);
+            if(!art) return;
+            document.getElementById('grid-view').classList.add('hidden');
+            document.getElementById('nav-bar').classList.add('hidden');
+            document.getElementById('full-view').classList.remove('hidden');
+            document.getElementById('full-content').innerHTML = `<h1 class="text-3xl font-bold">${art.titre}</h1><p class="mt-4">${art.contenu}</p>`;
+        };
 
-        function clearForm() {
-            ['artTitre', 'artResume', 'artContenu', 'artImage'].forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.value = '';
-            });
-        }
+        // Raccourci Shift+A
+        window.addEventListener('keydown', (e) => {
+            if (e.shiftKey && e.key.toLowerCase() === 'a') {
+                const code = prompt("Code :");
+                if (code === ADMIN_CODE) window.openAdmin();
+            }
+        });
+
+        // Lancement au chargement
+        window.onload = window.loadArticles;
     </script>
 </body>
 
 </html>
+
