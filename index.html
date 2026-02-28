@@ -14,6 +14,7 @@
         .locked { opacity: 0.5; cursor: not-allowed; background: #f1f5f9; }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; backdrop-filter: blur(4px); }
         main { flex: 1; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
@@ -28,8 +29,9 @@
                 <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Actualités internationales</p>
             </div>
         </div>
-        <div>
+        <div class="flex gap-2">
             <button onclick="openAuth()" id="btn-login" class="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-bold py-2 px-4 rounded-xl transition">Connexion / Inscription</button>
+            <button onclick="logout()" id="btn-logout" class="hidden bg-red-50 text-red-600 text-sm font-bold py-2 px-4 rounded-xl hover:bg-red-100 transition">Déconnexion</button>
         </div>
     </header>
 
@@ -52,17 +54,14 @@
             <div id="full-content"></div>
             
             <div class="mt-10 pt-8 border-t border-gray-100">
-                <div class="flex gap-4 mb-8" id="vote-section">
-                    </div>
+                <div class="flex gap-4 mb-8" id="vote-section"></div>
                 
                 <h3 class="font-bold text-xl mb-4">Commentaires</h3>
                 <div class="bg-gray-50 p-4 rounded-2xl mb-6">
-                    <textarea id="new-comment" rows="3" class="w-full bg-white border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 mb-3" placeholder="Écrire un commentaire... (Connectez-vous d'abord)"></textarea>
+                    <textarea id="new-comment" rows="3" class="w-full bg-white border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 mb-3" placeholder="Exprimez-vous... (Connexion requise)"></textarea>
                     <button onclick="postComment()" class="bg-[#0056b3] text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-600 transition">Publier</button>
                 </div>
-                <div id="comments-list" class="space-y-4 text-gray-600 text-sm">
-                    <i>Les commentaires arrivent bientôt !</i>
-                </div>
+                <div id="comments-list" class="space-y-4 text-sm"></div>
             </div>
         </div>
     </main>
@@ -72,34 +71,30 @@
         <button onclick="openCookiesModal()" class="text-blue-500 text-xs mt-4 underline">Gérer les cookies & Règlement</button>
     </footer>
 
-    <div id="cookiesModal" class="modal-overlay flex items-center justify-center p-4">
-        <div class="bg-white max-w-lg w-full rounded-3xl shadow-2xl p-8 border max-h-[90vh] overflow-y-auto">
-            <h2 class="text-2xl font-black mb-4">🍪 Règlement & Cookies</h2>
-            <div class="text-sm text-gray-600 space-y-4 mb-6 leading-relaxed">
-                <p>Bienvenue sur L'info Francophone. Pour assurer un espace d'information sain et sécurisé, voici nos règles :</p>
-                <ul class="list-disc pl-5 space-y-2">
-                    <li><strong>Respect :</strong> Les commentaires injurieux, haineux ou racistes entraîneront la suppression immédiate de votre compte.</li>
-                    <li><strong>Cookies :</strong> Nous utilisons des cookies pour sauvegarder vos préférences (comme votre connexion au compte) et des données analytiques anonymes.</li>
-                    <li><strong>Sécurité :</strong> Vos mots de passe sont cryptés. Nous ne pouvons pas les voir. Nous conservons le droit de bloquer un compte en cas de non-respect des règles.</li>
-                </ul>
-                <p>En cliquant sur "Accepter", vous vous engagez à respecter ce règlement et acceptez l'utilisation de cookies.</p>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="accepterCookies()" class="flex-1 bg-[#0056b3] text-white py-3 rounded-xl font-bold hover:bg-blue-600 transition">Accepter tout</button>
-                <button onclick="refuserCookies()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-300 transition">Refuser</button>
-            </div>
-        </div>
-    </div>
-
     <div id="authModal" class="modal-overlay flex items-center justify-center p-4">
-        <div class="bg-white max-w-sm w-full rounded-3xl shadow-2xl p-8 border">
+        <div class="bg-white max-w-sm w-full rounded-3xl shadow-2xl p-8 border max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-800">Connexion</h2>
                 <button onclick="closeAuth()" class="text-gray-400 hover:text-red-500 font-bold">X</button>
             </div>
-            <input type="email" id="authEmail" placeholder="Votre Email" class="w-full p-4 border rounded-2xl bg-gray-50 mb-3 outline-none">
-            <input type="password" id="authPassword" placeholder="Mot de passe" class="w-full p-4 border rounded-2xl bg-gray-50 mb-6 outline-none">
-            <button onclick="alert('La connexion via Supabase arrive bientôt !')" class="w-full bg-[#0056b3] text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition">Se connecter / S'inscrire</button>
+            
+            <div class="space-y-3">
+                <input type="email" id="authEmail" placeholder="Email" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
+                <input type="password" id="authPassword" placeholder="Mot de passe" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
+                <button onclick="loginClassic()" class="w-full bg-[#0056b3] text-white py-3 rounded-2xl font-bold hover:bg-blue-700 transition">Se connecter / S'inscrire</button>
+            </div>
+            
+            <div class="flex items-center my-6">
+                <div class="flex-grow border-t border-gray-200"></div>
+                <span class="px-4 text-[10px] text-gray-400 font-bold uppercase tracking-widest">Ou via</span>
+                <div class="flex-grow border-t border-gray-200"></div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3">
+                <button onclick="loginProvider('google')" class="flex items-center justify-center gap-2 border py-3 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 transition">Google</button>
+                <button onclick="loginProvider('github')" class="flex items-center justify-center gap-2 border py-3 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 transition">GitHub</button>
+                <button onclick="loginProvider('facebook')" class="flex items-center justify-center gap-2 border py-3 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 transition">Facebook</button>
+            </div>
         </div>
     </div>
 
@@ -110,7 +105,7 @@
                 <button onclick="closeAdmin()" class="text-gray-400 hover:text-red-500 font-bold">Quitter</button>
             </div>
             <div class="space-y-4">
-                <input type="text" id="artTitre" placeholder="Titre de l'article" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
+                <input type="text" id="artTitre" placeholder="Titre" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
                 <div class="grid grid-cols-2 gap-4">
                     <select id="artRegion" class="p-4 border rounded-2xl bg-gray-50 outline-none">
                         <option value="France">France</option>
@@ -118,16 +113,23 @@
                     </select>
                     <input type="date" id="artDate" class="p-4 border rounded-2xl bg-gray-50 outline-none">
                 </div>
-                <textarea id="artResume" rows="2" placeholder="Résumé court" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none"></textarea>
                 <textarea id="artContenu" rows="6" placeholder="Contenu complet" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none"></textarea>
-                <input type="text" id="artImage" placeholder="URL de l'image" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
-                <button onclick="publierArticle()" class="w-full bg-[#0056b3] text-white py-4 rounded-2xl font-bold transition">Publier l'article</button>
+                <input type="text" id="artImage" placeholder="URL Image" class="w-full p-4 border rounded-2xl bg-gray-50 outline-none">
+                <button onclick="publierArticle()" class="w-full bg-[#0056b3] text-white py-4 rounded-2xl font-bold transition">Publier</button>
             </div>
         </div>
     </div>
 
-   <script>
-// --- CONFIGURATION SUPABASE ---
+    <div id="cookiesModal" class="modal-overlay flex items-center justify-center p-4">
+        <div class="bg-white max-w-lg w-full rounded-3xl shadow-2xl p-8 border">
+            <h2 class="text-2xl font-black mb-4">🍪 Règlement</h2>
+            <p class="text-sm text-gray-600 mb-6">En utilisant ce site, vous acceptez nos cookies pour la gestion du compte et des votes.</p>
+            <button onclick="accepterCookies()" class="w-full bg-[#0056b3] text-white py-3 rounded-xl font-bold transition">Accepter</button>
+        </div>
+    </div>
+
+    <script>
+// --- CONFIGURATION ---
 const SUPABASE_URL = 'https://yyxazalektggkbkeaafn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eGF6YWxla3RnZ2tia2VhYWZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNzIzMDEsImV4cCI6MjA4Nzg0ODMwMX0.5VhDqn80TiofCbTOdM4GXUrUIkwqpG7RX986Ri9S8sM';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -135,166 +137,148 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const ADMIN_CODE = "MK-ADMIN-&4ScR0+75v";
 let articlesData = [];
 let currentFilter = 'Toutes';
+let currentArticleId = null;
+let currentUser = null;
 
-// --- GESTION DES COOKIES & RÈGLEMENT ---
-function verifierCookies() {
-    if (!localStorage.getItem('choixCookies')) {
-        document.getElementById('cookiesModal').style.display = 'flex';
+// --- AUTHENTIFICATION RÉELLE ---
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session) {
+        currentUser = session.user.user_metadata.full_name || session.user.email.split('@');
+        document.getElementById('btn-login').innerText = "👤 " + currentUser;
+        document.getElementById('btn-logout').classList.remove('hidden');
+    } else {
+        currentUser = null;
+        document.getElementById('btn-login').innerText = "Connexion / Inscription";
+        document.getElementById('btn-logout').classList.add('hidden');
     }
-}
-window.openCookiesModal = () => document.getElementById('cookiesModal').style.display = 'flex';
-window.accepterCookies = function() {
-    localStorage.setItem('choixCookies', 'accepte');
-    document.getElementById('cookiesModal').style.display = 'none';
-};
-window.refuserCookies = function() {
-    localStorage.setItem('choixCookies', 'refuse');
-    document.getElementById('cookiesModal').style.display = 'none';
-    alert("Certaines fonctionnalités (comme la connexion) nécessitent les cookies.");
+});
+
+window.loginClassic = async function() {
+    const email = document.getElementById('authEmail').value;
+    const password = document.getElementById('authPassword').value;
+    const { error } = await supabaseClient.auth.signUp({ email, password });
+    if (error) {
+        const { error: errLogin } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (errLogin) alert(errLogin.message); else closeAuth();
+    } else {
+        alert("Compte créé ! Vérifiez vos emails si besoin.");
+        closeAuth();
+    }
 };
 
-// --- AUTHENTIFICATION (UI) ---
+window.loginProvider = async (provider) => {
+    await supabaseClient.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin } });
+};
+
+window.logout = async () => { await supabaseClient.auth.signOut(); location.reload(); };
 window.openAuth = () => document.getElementById('authModal').style.display = 'flex';
 window.closeAuth = () => document.getElementById('authModal').style.display = 'none';
 
-// --- LOGIQUE ARTICLES ---
-window.filterRegion = function(region) {
-    currentFilter = region;
-    document.querySelectorAll('.region-btn').forEach(btn => {
-        btn.classList.remove('active-tab');
-        if (btn.innerText.includes(region) || (region === 'Toutes' && btn.innerText.includes('Toutes'))) {
-            btn.classList.add('active-tab');
-        }
-    });
-    window.closeArticle();
-    render();
-};
-
-window.loadArticles = async function() {
-    const loader = document.getElementById('loader-msg');
-    if(loader) loader.style.display = 'block';
-    try {
-        const { data, error } = await supabaseClient.from('articles').select('*').order('created_at', { ascending: false });
-        if (data) { articlesData = data; render(); }
-    } catch (err) { console.error(err); }
-    if(loader) loader.style.display = 'none';
+// --- GESTION ARTICLES ---
+window.loadArticles = async () => {
+    const { data } = await supabaseClient.from('articles').select('*').order('created_at', { ascending: false });
+    if (data) { articlesData = data; render(); }
+    document.getElementById('loader-msg').style.display = 'none';
 };
 
 function render() {
     const grid = document.getElementById('articles-grid');
-    if(!grid) return;
     const filtered = currentFilter === 'Toutes' ? articlesData : articlesData.filter(a => a.region === currentFilter);
-    
-    if (filtered.length === 0) {
-        grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-400">Aucun article pour le moment.</div>';
-    } else {
-        grid.innerHTML = filtered.map(art => `
-            <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all cursor-pointer group" onclick="viewArticle(${art.id})">
-                <div class="h-52 overflow-hidden">
-                    <img src="${art.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800'">
-                </div>
-                <div class="p-6">
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="bg-blue-50 text-[#0056b3] text-[10px] font-black px-3 py-1 rounded-full uppercase">${art.region}</span>
-                        <span class="text-[10px] text-gray-400 font-bold">${art.date_manuelle || ''}</span>
-                    </div>
-                    <h3 class="font-bold text-gray-800 text-lg mb-3 group-hover:text-blue-700">${art.titre}</h3>
-                    <div class="flex gap-3 text-xs text-gray-400 font-bold">
-                        <span>👍 ${art.likes || 0}</span>
-                        <span>👎 ${art.dislikes || 0}</span>
-                    </div>
-                </div>
+    grid.innerHTML = filtered.length ? filtered.map(art => `
+        <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all cursor-pointer group" onclick="viewArticle(${art.id})">
+            <div class="h-52 overflow-hidden"><img src="${art.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"></div>
+            <div class="p-6">
+                <div class="flex justify-between mb-3"><span class="bg-blue-50 text-[#0056b3] text-[10px] font-black px-3 py-1 rounded-full uppercase">${art.region}</span></div>
+                <h3 class="font-bold text-gray-800 text-lg mb-3">${art.titre}</h3>
+                <div class="flex gap-3 text-xs text-gray-400 font-bold"><span>👍 ${art.likes || 0}</span><span>👎 ${art.dislikes || 0}</span></div>
             </div>
-        `).join('');
-    }
+        </div>
+    `).join('') : '<div class="col-span-full text-center text-gray-400">Aucun article.</div>';
 }
 
-// Visualisation de l'article et des Votes
-window.viewArticle = function(id) {
+window.viewArticle = (id) => {
     const art = articlesData.find(a => a.id === id);
     if(!art) return;
+    currentArticleId = id;
     document.getElementById('grid-view').classList.add('hidden');
     document.getElementById('nav-bar').classList.add('hidden');
     document.getElementById('full-view').classList.remove('hidden');
-    
     document.getElementById('full-content').innerHTML = `
         <h1 class="text-3xl font-bold mb-4">${art.titre}</h1>
         <img src="${art.image}" class="w-full h-64 object-cover rounded-2xl mb-6">
         <div class="text-gray-800 leading-relaxed whitespace-pre-wrap">${art.contenu}</div>
     `;
-
-    document.getElementById('vote-section').innerHTML = `
-        <button onclick="voteArticle(${art.id}, 'up')" class="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-xl font-bold hover:bg-green-100 transition">👍 ${art.likes || 0}</button>
-        <button onclick="voteArticle(${art.id}, 'down')" class="flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-xl font-bold hover:bg-red-100 transition">👎 ${art.dislikes || 0}</button>
-    `;
+    renderVotes(art);
+    loadComments(id);
     window.scrollTo(0,0);
 };
 
-window.closeArticle = function() {
+window.closeArticle = () => {
     document.getElementById('grid-view').classList.remove('hidden');
     document.getElementById('nav-bar').classList.remove('hidden');
     document.getElementById('full-view').classList.add('hidden');
 };
 
-// --- SYSTÈME DE VOTE (Lié à Supabase) ---
-window.voteArticle = async function(id, type) {
+// --- SYSTÈME DE VOTE ANTI-SPAM ---
+function renderVotes(art) {
+    const myVote = localStorage.getItem('v_' + art.id);
+    const upBtn = myVote === 'up' ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700';
+    const downBtn = myVote === 'down' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-700';
+    document.getElementById('vote-section').innerHTML = `
+        <button onclick="voteArticle(${art.id}, 'up')" class="flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition ${upBtn}">👍 ${art.likes || 0}</button>
+        <button onclick="voteArticle(${art.id}, 'down')" class="flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition ${downBtn}">👎 ${art.dislikes || 0}</button>
+    `;
+}
+
+window.voteArticle = async (id, type) => {
     const art = articlesData.find(a => a.id === id);
-    if (!art) return;
+    const key = 'v_' + id;
+    const old = localStorage.getItem(key);
+    let up = art.likes || 0, down = art.dislikes || 0;
 
-    // Incrémente localement pour que ce soit rapide à l'écran
-    let newLikes = art.likes || 0;
-    let newDislikes = art.dislikes || 0;
-    
-    if (type === 'up') newLikes++;
-    if (type === 'down') newDislikes++;
-
-    // Envoi à la base de données
-    const { error } = await supabaseClient.from('articles')
-        .update({ likes: newLikes, dislikes: newDislikes })
-        .eq('id', id);
-
-    if (!error) {
-        art.likes = newLikes;
-        art.dislikes = newDislikes;
-        viewArticle(id); // Rafraîchit les boutons
+    if (old === type) { // Annulation
+        type === 'up' ? up-- : down--;
+        localStorage.removeItem(key);
     } else {
-        alert("Erreur lors du vote. As-tu bien créé les colonnes 'likes' et 'dislikes' dans Supabase ?");
+        if (old === 'up') up--; if (old === 'down') down--; // Enlever l'ancien
+        type === 'up' ? up++ : down++; // Ajouter le nouveau
+        localStorage.setItem(key, type);
     }
+
+    art.likes = Math.max(0, up); art.dislikes = Math.max(0, down);
+    renderVotes(art);
+    await supabaseClient.from('articles').update({ likes: art.likes, dislikes: art.dislikes }).eq('id', id);
 };
 
-window.postComment = function() {
-    alert("La fonctionnalité de base de données pour les commentaires sera branchée dès que l'authentification sera activée !");
+// --- COMMENTAIRES ---
+window.loadComments = async (artId) => {
+    const { data } = await supabaseClient.from('commentaires').select('*').eq('article_id', artId).order('created_at', { ascending: false });
+    document.getElementById('comments-list').innerHTML = data && data.length ? data.map(c => `
+        <div class="bg-white border p-4 rounded-xl shadow-sm">
+            <strong class="text-blue-700 block text-xs">@${c.pseudo}</strong>
+            <p class="text-gray-700 mt-1">${c.contenu}</p>
+        </div>
+    `).join('') : '<i class="text-gray-400">Aucun commentaire.</i>';
 };
 
-window.publierArticle = async function() {
-    const newArt = {
-        titre: document.getElementById('artTitre').value,
-        region: document.getElementById('artRegion').value,
-        date_manuelle: document.getElementById('artDate').value || new Date().toISOString().split('T')[0],
-        resume: document.getElementById('artResume').value,
-        contenu: document.getElementById('artContenu').value,
-        image: document.getElementById('artImage').value || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800'
-    };
-    const { error } = await supabaseClient.from('articles').insert([newArt]);
-    if (!error) {
-        alert("Publié !");
-        window.loadArticles();
-        window.closeAdmin();
-    }
+window.postComment = async () => {
+    if (!currentUser) return openAuth();
+    const input = document.getElementById('new-comment');
+    const content = input.value.trim();
+    if (!content) return;
+    await supabaseClient.from('commentaires').insert([{ article_id: currentArticleId, pseudo: currentUser, contenu: content }]);
+    input.value = ''; loadComments(currentArticleId);
 };
 
-window.openAdmin = () => document.getElementById('adminModal').style.display = 'block';
+// --- AUTRES ---
+window.filterRegion = (r) => { currentFilter = r; document.querySelectorAll('.region-btn').forEach(b => b.classList.toggle('active-tab', b.innerText.includes(r))); window.closeArticle(); render(); };
+window.accepterCookies = () => { localStorage.setItem('cookies', 'ok'); document.getElementById('cookiesModal').style.display = 'none'; };
+window.onload = () => { window.loadArticles(); if(!localStorage.getItem('cookies')) document.getElementById('cookiesModal').style.display = 'flex'; };
+window.addEventListener('keydown', (e) => { if (e.shiftKey && e.key.toLowerCase() === 'a' && prompt("Code :") === ADMIN_CODE) document.getElementById('adminModal').style.display = 'block'; });
 window.closeAdmin = () => document.getElementById('adminModal').style.display = 'none';
-
-window.addEventListener('keydown', (e) => {
-    if (e.shiftKey && e.key.toLowerCase() === 'a') {
-        if (prompt("Code :") === ADMIN_CODE) window.openAdmin();
-    }
-});
-
-window.onload = function() {
-    window.loadArticles();
-    verifierCookies();
+window.publierArticle = async () => {
+    const a = { titre: document.getElementById('artTitre').value, region: document.getElementById('artRegion').value, date_manuelle: document.getElementById('artDate').value, contenu: document.getElementById('artContenu').value, image: document.getElementById('artImage').value || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800' };
+    await supabaseClient.from('articles').insert([a]); location.reload();
 };
     </script>
 </body>
